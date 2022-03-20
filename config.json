@@ -1,0 +1,12 @@
+{
+  "osu_client": {
+    "token": "",
+    "id": 0000
+  },
+  "mysql": {
+    "host": "127.0.0.1",
+    "user": "root",
+    "password": "123456",
+    "database": "database"
+  }
+}
