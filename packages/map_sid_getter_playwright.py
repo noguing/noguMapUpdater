@@ -124,8 +124,9 @@ def run(playwright: Playwright) -> None:
 
     logger.info("playwright: 开始遍历...")
     while True:
-        # 滚动到页面底部
+        # 滚动到页面顶部再回到底部
         page.wait_for_timeout(500)  # 等待五秒滚动一次
+        page.evaluate("window.scrollTo(0,0);")
         page.evaluate("window.scrollTo(0,document.body.scrollHeight);")
 
     # ---------------------
