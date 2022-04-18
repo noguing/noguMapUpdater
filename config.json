@@ -1,12 +1,16 @@
 {
   "osu_client": {
-    "token": "",
-    "id": 0000
+    "token": "your osu v2 client token",
+    "id": 362184
   },
   "mysql": {
     "host": "127.0.0.1",
     "user": "root",
     "password": "123456",
     "database": "database"
+  },
+  "osu_account": {
+    "username": "your osu name",
+    "password": "your osu password"
   }
 }

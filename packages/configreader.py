@@ -6,3 +6,4 @@ def config_reader(content_to_return: str) -> dict:
     match content_to_return:
         case "osu_client": return j["osu_client"]
         case "mysql": return j["mysql"]
+        case "osu_account": return j["osu_account"]
