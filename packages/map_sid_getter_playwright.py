@@ -1,8 +1,5 @@
 from playwright.sync_api import Playwright, sync_playwright, expect
-if __name__ == "__main__":
-    from configreader import config_reader
-else:
-    from packages.configreader import config_reader
+from packages.configreader import config_reader
 from time import strftime, localtime
 from loguru import logger
 from json import dumps as jsondumps
@@ -11,7 +8,7 @@ PROXY_HTTP = "http://127.0.0.1:54433"
 # PROXY_SOCKS5 = "socks5://127.0.0.1:51837"
 
 browserLaunchOptionDict = {
-    "headless": False,
+    "headless": True,
     "proxy": {
         "server": PROXY_HTTP,
     }
@@ -83,22 +80,25 @@ def run(playwright: Playwright) -> None:
     page.locator(".avatar.avatar--nav2").click()
 
     logger.info("playwright: 输入用户名")
-    # Click [placeholder="用户名"]
-    page.locator("[placeholder=\"用户名\"]").click()
+    # # Click [placeholder="用户名"]
+    # page.locator("[placeholder=\"用户名\"]").click()
 
     # Fill [placeholder="用户名"]
-    page.locator("[placeholder=\"用户名\"]").fill(config["username"])
+    page.fill("body > div.login-box > div > form > div.login-box__row.login-box__row--inputs > "
+              "input.login-box__form-input.js-login-form-input.js-nav2--autofocus", config["username"])
 
     logger.info("playwright: 输入密码")
-    # Click [placeholder="密码"]
-    page.locator("[placeholder=\"密码\"]").click()
+    # # Click [placeholder="密码"]
+    # page.locator("[placeholder=\"密码\"]").click()
 
     # Fill [placeholder="密码"]
-    page.locator("[placeholder=\"密码\"]").fill(config["password"])
+    page.fill("body > div.login-box > div > form > div.login-box__row.login-box__row--inputs > input:nth-child(2)",
+              config["password"])
 
     logger.info("playwright: 点击登录")
     # Click text=登录以继续 我忘记了我的登录信息 登录 >> button
-    page.locator("text=登录以继续 我忘记了我的登录信息 登录 >> button").click()
+    page.locator("body > div.login-box > div > form > div.login-box__row.login-box__row--actions > div > button")\
+        .click()
 
     logger.info("playwright: 等待5秒开始遍历")
     # 等待十秒登录(
@@ -106,10 +106,12 @@ def run(playwright: Playwright) -> None:
 
     logger.info("playwright: 切换为全部图而不是仅含有排行榜")
     # Click text=更多搜索选项
-    page.locator("text=更多搜索选项").click()
+    page.locator("body > div.osu-layout__section.osu-layout__section--full.js-content.beatmaps_index > div > "
+                 "div:nth-child(2) > div > div > a").click()
 
     # Click .beatmapsets-search div:nth-child(5) .beatmapsets-search-filter__items a >> nth=0
-    page.locator(".beatmapsets-search div:nth-child(5) .beatmapsets-search-filter__items a").first.click()
+    page.locator("body > div.osu-layout__section.osu-layout__section--full.js-content.beatmaps_index > div > "
+                 "div:nth-child(2) > div > div > div:nth-child(5) > div > a:nth-child(1)").click()
 
     logger.info("playwright: 开始监听类型response类型")
     # 监听response类型
@@ -125,7 +127,3 @@ def run(playwright: Playwright) -> None:
     context.close()
     browser.close()
 
-
-if __name__ == "__main__":
-    with sync_playwright() as playwright:
-        run(playwright)
