@@ -1,3 +1,5 @@
+import re
+
 from playwright.sync_api import Playwright, sync_playwright, expect
 from packages.configreader import config_reader
 from time import strftime, localtime
@@ -71,6 +73,9 @@ def run(playwright: Playwright) -> None:
     browser = playwright.chromium.launch(**browserLaunchOptionDict)
     context = browser.new_context()
 
+    context.route("**/*.{png,jpg,jpeg}", lambda route: route.abort())
+    context.route(re.compile(r"(\.png$)|(\.jpg$)|(\.jpeg$)"), lambda route: route.abort())
+
     page = browser.new_page()
 
     logger.info("playwright: 跳转至osu.ppy.sh/beatmapsets")
@@ -117,10 +122,10 @@ def run(playwright: Playwright) -> None:
     # 监听response类型
     page.on("response", sid_response)
 
-    logger.info("playwright: 开始遍历...3s")
+    logger.info("playwright: 开始遍历...")
     while True:
         # 滚动到页面底部
-        page.wait_for_timeout(3000)  # 等待五秒滚动一次
+        page.wait_for_timeout(500)  # 等待五秒滚动一次
         page.evaluate("window.scrollTo(0,document.body.scrollHeight);")
 
     # ---------------------
