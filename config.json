@@ -3,14 +3,22 @@
     "token": "your osu v2 client token",
     "id": 362184
   },
-  "mysql": {
+  "mongodb": {
     "host": "127.0.0.1",
-    "user": "root",
-    "password": "123456",
-    "database": "database"
+    "port": 27017,
+    "user": "",
+    "password": "",
+    "database": "nogu",
+    "collection": "beatmapsets"
   },
   "osu_account": {
     "username": "your osu name",
     "password": "your osu password"
+  },
+  "get_map": {
+    "beatmapset_save_type": "mongodb",
+    "proxy": {
+      "server": "http://127.0.0.1:54433"
+    }
   }
 }
