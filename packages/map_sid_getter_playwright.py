@@ -7,7 +7,6 @@ from time import strftime, localtime
 from loguru import logger
 from json import dumps as jsondumps
 
-
 CONFIG = config_reader("get_map")
 
 
@@ -43,9 +42,6 @@ def file_reset():
         yield fp, file_input_count
 
 
-FR = file_reset()  # 初始化生成器
-
-
 def save_to_file(response):
     try:  # 报错则不是json，不添加(铺面搜索界面的json只有铺面)
         resj = response.json()  # 放在前边，用于检测是否为json，不是直接报错退出等待下一次调用
@@ -65,7 +61,7 @@ def connect_to_mongodb():
         logger.info("尝试登入mongodb")
         mongo_config = config_reader("mongodb")
         if (mongo_config["user"] is None and mongo_config["password"] is None) or \
-           (mongo_config["user"] == "" and mongo_config["password"] == ""):
+                (mongo_config["user"] == "" and mongo_config["password"] == ""):
             # 无密码连接
             logger.info("config.json中没有填写用户名与密码，采用无密码连接")
             mongo_client = pymongo.MongoClient(
@@ -88,16 +84,22 @@ def connect_to_mongodb():
     return mongo_collection
 
 
-if CONFIG["beatmapset_save_type"] == "mongodb":
-    MONGO = connect_to_mongodb()
+match CONFIG["beatmapset_save_type"]:
+    case "mongodb":
+        MONGO = connect_to_mongodb()
+    case "file":
+        FR = file_reset()  # 初始化生成器
 
 
 def save_to_mongodb(response):
     try:
         resj = response.json()
         try:
-            logger.info("保存数据到mongodb")
-            MONGO.insert_many([i for i in resj["beatmapsets"]])
+            n = 1
+            for i in resj["beatmapsets"]:
+                logger.info(f"保存第{n}条到mongodb")
+                MONGO.update_one({"id": i["id"]}, {"$set": i}, upsert=True)
+                n += 1
         except Exception as e:
             logger.error(e)
     except Exception:
@@ -106,13 +108,19 @@ def save_to_mongodb(response):
 
 def sid_response(response):
     match CONFIG["beatmapset_save_type"]:
-        case "file": save_to_file(response)
-        case "mongodb": save_to_mongodb(response)
+        case "file":
+            save_to_file(response)
+        case "mongodb":
+            save_to_mongodb(response)
 
 
 def run(playwright: Playwright) -> None:
     browser_launch_option_dict = {
-        "headless": False
+        "firefox_user_prefs": {
+            # 关闭图片加载
+            "permissions.default.image": 2
+        },
+        "headless": True
     }
 
     logger.info("读取配置文件")
@@ -123,34 +131,24 @@ def run(playwright: Playwright) -> None:
     config = config_reader("osu_account")
 
     logger.info("playwright: 打开浏览器")
-    browser = playwright.chromium.launch(**browser_launch_option_dict)
+    browser = playwright.firefox.launch(**browser_launch_option_dict)
     context = browser.new_context()
-
-    context.route("**/*.{png,jpg,jpeg}", lambda route: route.abort())
-    context.route(re.compile(r"(\.png$)|(\.jpg$)|(\.jpeg$)"), lambda route: route.abort())
 
     page = browser.new_page()
 
     logger.info("playwright: 跳转至osu.ppy.sh/beatmapsets")
     page.goto("https://osu.ppy.sh/beatmapsets", timeout=3000000)
 
-    # # 关闭图片加载
-    # page.evaluate("document.querySelector(\".beatmapset-panel\").innerHTML = \"<span>F</span>\"")
-
     # Click .avatar.avatar--nav2
     page.locator(".avatar.avatar--nav2").click()
 
     logger.info("playwright: 输入用户名")
-    # # Click [placeholder="用户名"]
-    # page.locator("[placeholder=\"用户名\"]").click()
 
     # Fill [placeholder="用户名"]
     page.fill("body > div.login-box > div > form > div.login-box__row.login-box__row--inputs > "
               "input.login-box__form-input.js-login-form-input.js-nav2--autofocus", config["username"])
 
     logger.info("playwright: 输入密码")
-    # # Click [placeholder="密码"]
-    # page.locator("[placeholder=\"密码\"]").click()
 
     # Fill [placeholder="密码"]
     page.fill("body > div.login-box > div > form > div.login-box__row.login-box__row--inputs > input:nth-child(2)",
@@ -158,7 +156,7 @@ def run(playwright: Playwright) -> None:
 
     logger.info("playwright: 点击登录")
     # Click text=登录以继续 我忘记了我的登录信息 登录 >> button
-    page.locator("body > div.login-box > div > form > div.login-box__row.login-box__row--actions > div > button")\
+    page.locator("body > div.login-box > div > form > div.login-box__row.login-box__row--actions > div > button") \
         .click()
 
     logger.info("playwright: 等待5秒开始遍历")
@@ -181,11 +179,10 @@ def run(playwright: Playwright) -> None:
     logger.info("playwright: 开始遍历...")
     while True:
         # 滚动到页面顶部再回到底部
-        page.wait_for_timeout(500)  # 等待五秒滚动一次
+        page.wait_for_timeout(500)  # 等待2秒滚动一次
         page.evaluate("window.scrollTo(0,0);")
         page.evaluate("window.scrollTo(0,document.body.scrollHeight);")
 
     # ---------------------
     # context.close()
     # browser.close()
-
