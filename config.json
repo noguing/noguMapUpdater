@@ -1,19 +1,19 @@
 {
   "osu_client": {
-    "token": "your osu v2 client token",
+    "token": "your osu v2 client token  (deprecated, dont need to set. 'id' below also dont need.)",
     "id": 362184
   },
   "mongodb": {
-    "host": "127.0.0.1",
+    "host": "localhost",
     "port": 27017,
     "user": "",
     "password": "",
-    "database": "nogu",
-    "collection": "beatmapsets"
+    "database": "test",
+    "collection": "osubeatmapsets"
   },
   "osu_account": {
-    "username": "your osu name",
-    "password": "your osu password"
+    "username": "Freezetime  (deprecated, dont need to set)",
+    "password": "qwsa1234  (deprecated, dont need to set)"
   },
   "get_map": {
     "beatmapset_save_type": "mongodb",
