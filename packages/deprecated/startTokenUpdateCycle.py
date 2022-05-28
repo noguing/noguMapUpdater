@@ -1,14 +1,14 @@
 import sched
 import time
 import json
-from packages.getToken import get_token
+from packages.deprecated.getToken import get_token
 
 
 schedule = sched.scheduler(time.time, time.sleep)
 
 
 def token_update(inc):
-    config = json.load(open("config.json", 'r'))["osu_client"]
+    config = json.load(open("../../config.json", 'r'))["osu_client"]
     get_token(client_id=config["id"], client_secret=config["token"])
     schedule.enter(inc, 0, token_update, (inc,))
 

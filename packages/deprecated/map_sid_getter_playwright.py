@@ -1,4 +1,8 @@
-import re
+"""
+
+废弃不再使用谢谢
+
+"""
 import pymongo
 
 from playwright.sync_api import Playwright
@@ -96,8 +100,8 @@ def save_to_mongodb(response):
         resj = response.json()
         try:
             n = 1
+            logger.info(f"保存{len(resj['beatmapsets'])}数据到mongodb")
             for i in resj["beatmapsets"]:
-                logger.info(f"保存第{n}条到mongodb")
                 MONGO.update_one({"id": i["id"]}, {"$set": i}, upsert=True)
                 n += 1
         except Exception as e:
@@ -168,6 +172,10 @@ def run(playwright: Playwright) -> None:
     page.locator("body > div.osu-layout__section.osu-layout__section--full.js-content.beatmaps_index > div > "
                  "div:nth-child(2) > div > div > a").click()
 
+    page.locator("body > div.osu-layout__section.osu-layout__section--full.js-content.beatmaps_index > div > "
+                 "div:nth-child(2) > div > div > div:nth-child(4) > div > "
+                 "a.beatmapsets-search-filter__item.beatmapsets-search-filter__item--active")
+
     # Click .beatmapsets-search div:nth-child(5) .beatmapsets-search-filter__items a >> nth=0
     page.locator("body > div.osu-layout__section.osu-layout__section--full.js-content.beatmaps_index > div > "
                  "div:nth-child(2) > div > div > div:nth-child(5) > div > a:nth-child(1)").click()
@@ -179,7 +187,7 @@ def run(playwright: Playwright) -> None:
     logger.info("playwright: 开始遍历...")
     while True:
         # 滚动到页面顶部再回到底部
-        page.wait_for_timeout(500)  # 等待2秒滚动一次
+        page.wait_for_timeout(500)  # 等待0.5秒滚动一次
         page.evaluate("window.scrollTo(0,0);")
         page.evaluate("window.scrollTo(0,document.body.scrollHeight);")
 

@@ -1,8 +1,8 @@
 import multiprocessing
-from packages.map_sid_getter_playwright import run as run_explore_ppy_maps
+from packages.deprecated.map_sid_getter_playwright import run as run_explore_ppy_maps
 from playwright.sync_api import sync_playwright
-from startTokenUpdateCycle import cycle as token_cycle
-from startMapUpdateCycle import cycle as map_update_cycle
+from packages.deprecated.startTokenUpdateCycle import cycle as token_cycle
+from packages.deprecated.startMapUpdateCycle import cycle as map_update_cycle
 from sys import argv
 
 

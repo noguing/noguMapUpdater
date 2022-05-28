@@ -1,7 +1,7 @@
 from packages.configreader import config_reader
 import pymysql
 from pymysql.converters import escape_string
-from packages.beatmap import Beatmap
+from packages.deprecated.beatmap import Beatmap
 
 
 def add_osu_beatmap(beatmap: Beatmap):

@@ -1,10 +1,8 @@
 import httpx
-import json
 from requests import exceptions
 from tenacity import *
-from packages.beatmap import Beatmap
-import datetime
-from packages.getToken import get_token
+from packages.deprecated.beatmap import Beatmap
+from packages.deprecated.getToken import get_token
 
 headers = {"Authorization": f"Bearer {get_token(6322, 'G5Dpfd1hAgAt8zkt0aFklV8bteaZITv1vC2bxcfO')}",
            "Content-Type": "application/json",
