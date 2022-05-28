@@ -116,26 +116,18 @@ match CONFIG["beatmapset_save_type"]:
         FR = file_reset()  # 初始化生成器
 
 
-def run_map_get(cursor_string: str):
-    """
-    获取遍历ppy的铺面
-    :param cursor_string:
-    :return:
-    """
-
+def run_map_get():
     # 判断代理
     if CONFIG["proxy"]["server"] not in [None, '']:
         proxies = {
-            'http://': 'http://localhost:54433',  # 代理1
-            'https://': 'http://localhost:54433',  # 代理2
+            'http://': CONFIG["proxy"]["server"]
         }
     else:
         proxies = None
 
     with httpx.Client(proxies=proxies, timeout=60, verify=False) as client:
         params = {
-            "s": "any",
-            "cursor_string": cursor_string
+            "s": "any"
         }
         url = "https://osu.ppy.sh/beatmapsets/search"
         have_saved = 0  # 初始化计数器
