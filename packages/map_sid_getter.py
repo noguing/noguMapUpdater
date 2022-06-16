@@ -1,3 +1,6 @@
+import time
+from datetime import datetime
+
 import pymongo
 
 from packages.configreader import config_reader
@@ -90,14 +93,25 @@ def save_to_mongodb(response):
         try:
             n = 0
             for i in resj["beatmapsets"]:
-                MONGO.update_one({"id": i["id"]}, {"$set": i}, upsert=True)
+                x = 0
+                con = i
+                for j in i["beatmaps"]:  # 2022-04-04T03:52:33+00:00
+                    try:
+                        con[x]["ranked_date"] = datetime.strptime(j["ranked_date"], '%Y-%m-%dT%H:%M:%S+00:00')
+                    except Exception as e:
+                        pass
+                    x += 1
+                con["last_updated"] = datetime.strptime(i["last_updated"], '%Y-%m-%dT%H:%M:%S+00:00')
+                con["submitted_date"] = datetime.strptime(i["submitted_date"], '%Y-%m-%dT%H:%M:%S+00:00')
+
+                MONGO.update_one({"id": con["id"]}, {"$set": con}, upsert=True)
                 n += 1
             # logger.info(f"保存{n}数据到mongodb")
             return n
         except Exception as e:
             logger.error(e)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(e)
 
 
 def sid_response(response):
@@ -132,7 +146,10 @@ def run_map_get():
         url = "https://osu.ppy.sh/beatmapsets/search"
         have_saved = 0  # 初始化计数器
         while True:
-            resp = client.get(url=url, params=params).json()
+            @retrying.retry
+            def get_resp():
+                return client.get(url=url, params=params).json()
+            resp = get_resp()
             if resp["total"] == 0:
                 logger.error("没搜到...Not Found...")
                 break
@@ -146,4 +163,5 @@ def run_map_get():
             if resp["cursor_string"] is None:
                 logger.success("Done")
                 break
+            time.sleep(1)
 

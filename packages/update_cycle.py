@@ -1,5 +1,6 @@
 import httpx
 import pymongo
+import retrying
 
 from .configreader import config_reader
 from loguru import logger
@@ -53,6 +54,7 @@ def save_to_mongodb(response):
         pass
 
 
+@retrying.retry
 def update_new():
     # 判断代理
     if CONFIG["proxy"]["server"] not in [None, '']:

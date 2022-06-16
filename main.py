@@ -9,9 +9,10 @@ if __name__ == "__main__":
             try:
                 from packages.update_cycle import update_new
                 from time import sleep
+                logger.info("开始运行")
                 while True:
-                    n = 60
-                    for _ in range(60):
+                    n = 300
+                    for _ in range(300):
                         print(f"{n}秒后开始检测更新", end="\r")
                         sleep(1)
                         n -= 1
@@ -29,6 +30,8 @@ if __name__ == "__main__":
                 "    initget: \"Get all maps from ppy and save them to file or mongodb(depend on your config).\"\n"
                 "    help： \"Show this document.\"\n"
             )
-    except Exception:
+    except Exception as e:
+        logger.error(e)
+        print(e)
         print("Something went wrong, "
               "please run \"python {this_file}.py help\"or \"python3 {this_file}.py help\" to show help.")
