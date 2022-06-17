@@ -93,18 +93,38 @@ def save_to_mongodb(response):
         try:
             n = 0
             for i in resj["beatmapsets"]:
-                x = 0
-                con = i
-                for j in i["beatmaps"]:  # 2022-04-04T03:52:33+00:00
-                    try:
-                        con[x]["ranked_date"] = datetime.strptime(j["ranked_date"], '%Y-%m-%dT%H:%M:%S+00:00')
-                    except Exception as e:
-                        pass
-                    x += 1
-                con["last_updated"] = datetime.strptime(i["last_updated"], '%Y-%m-%dT%H:%M:%S+00:00')
-                con["submitted_date"] = datetime.strptime(i["submitted_date"], '%Y-%m-%dT%H:%M:%S+00:00')
+                i: dict
+                data = {}
+                for key, value in i.items():
+                    # 如果第一层里边有时间，转换为datetime
+                    if key in ["last_updated", "ranked_date", "submitted_date"]:
+                        try:  # try的原因是有的不会必然是时间，比如ranked_date
+                            n_value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S+00:00')
+                            data[key] = n_value
+                            continue
+                        except Exception:  # 这种情况下就直接塞进去
+                            data[key] = value
+                            continue
 
-                MONGO.update_one({"id": con["id"]}, {"$set": con}, upsert=True)
+                    # 遍历第二层，也就是单个beatmap，查询时间
+                    if key == "beatmaps":
+                        datab = {}
+                        for keyb, valueb in value:
+                            if keyb == "last_updated":
+                                try:  # 同上
+                                    n_valueb = datetime.strptime(valueb, '%Y-%m-%dT%H:%M:%S+00:00')
+                                    datab[keyb] = n_valueb
+                                    continue
+                                except Exception:  # 同上
+                                    datab[keyb] = valueb
+                                    continue
+                            datab[keyb] = valueb
+
+                        data[key] = datab
+
+                    data[key] = value
+
+                MONGO.update_one({"id": data["id"]}, {"$set": data}, upsert=True)
                 n += 1
             # logger.info(f"保存{n}数据到mongodb")
             return n
@@ -149,6 +169,7 @@ def run_map_get():
             @retrying.retry
             def get_resp():
                 return client.get(url=url, params=params).json()
+
             resp = get_resp()
             if resp["total"] == 0:
                 logger.error("没搜到...Not Found...")
@@ -157,6 +178,7 @@ def run_map_get():
             @retrying.retry
             def save(resp):
                 return sid_response(resp)
+
             have_saved += save(resp)
             logger.info(f"已经保存了{have_saved}条数据")
             params["cursor_string"] = resp["cursor_string"]
@@ -164,4 +186,3 @@ def run_map_get():
                 logger.success("Done")
                 break
             time.sleep(1)
-

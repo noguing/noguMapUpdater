@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import httpx
 import pymongo
 import retrying
@@ -6,6 +8,7 @@ from .configreader import config_reader
 from loguru import logger
 
 CONFIG = config_reader("get_map")
+
 
 def connect_to_mongodb():
     try:
@@ -35,8 +38,6 @@ def connect_to_mongodb():
         exit(0)
 
 
-
-
 def save_to_mongodb(response):
     try:
         # resj = response.json()
@@ -44,7 +45,36 @@ def save_to_mongodb(response):
         try:
             n = 0
             for i in resj["beatmapsets"]:
-                MONGO.update_one({"id": i["id"]}, {"$set": i}, upsert=True)
+                i: dict
+                data = {}
+                for key, value in i.items():
+                    # 如果第一层里边有时间，转换为datetime
+                    if key in ["last_updated", "ranked_date", "submitted_date"]:
+                        try:  # try的原因是有的不会必然是时间，比如ranked_date
+                            n_value = datetime.strptime(value, '%Y-%m-%dT%H:%M:%S+00:00')
+                            data[key] = n_value
+                            continue
+                        except Exception:  # 这种情况下就直接塞进去
+                            data[key] = value
+                            continue
+
+                    # 遍历第二层，也就是单个beatmap，查询时间
+                    if key == "beatmaps":
+                        datab = {}
+                        for keyb, valueb in value:
+                            if keyb == "last_updated":
+                                try:
+                                    n_valueb = datetime.strptime(valueb, '%Y-%m-%dT%H:%M:%S+00:00')
+                                    datab[keyb] = n_valueb
+                                    continue
+                                except Exception:
+                                    datab[keyb] = valueb
+                                    continue
+                            datab[keyb] = valueb
+                        data[key] = datab
+                    data[key] = value
+
+                MONGO.update_one({"id": data["id"]}, {"$set": data}, upsert=True)
                 n += 1
             logger.info(f"保存或更新{n}数据到mongodb")
             return n
